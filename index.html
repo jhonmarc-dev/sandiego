@@ -11,7 +11,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Login Page -->
     <div id="loginPage" class="page active">
         <div class="login-container">
             <div class="login-card">
@@ -39,12 +38,13 @@
                     <div id="loginError" class="error-message"></div>
                 </form>
             </div>
+            <div class="footer-credit">
+                Created by Jhon Marc Bautista
+            </div>
         </div>
     </div>
 
-    <!-- Dashboard Page -->
     <div id="dashboardPage" class="page">
-        <!-- Header -->
         <header class="dashboard-header">
             <div class="header-content">
                 <div class="header-title">
@@ -63,9 +63,7 @@
         </header>
 
         <div class="dashboard-container">
-            <!-- Sidebar -->
             <aside class="sidebar">
-                <!-- Add Asset Card -->
                 <div class="sidebar-card">
                     <div class="card-header">
                         <h3>
@@ -102,8 +100,10 @@
                                     <option value="In Use">In Use</option>
                                     <option value="Maintenance">Maintenance</option>
                                     <option value="Repair">Repair</option>
+                                    <option value="Fixed">Fixed</option>
                                 </select>
                             </div>
+                            <div id="addError" class="error-message"></div>
                             <div class="form-actions">
                                 <button type="submit" class="btn btn-primary">Add Asset</button>
                                 <button type="button" id="cancelAddBtn" class="btn btn-outline">Cancel</button>
@@ -112,7 +112,6 @@
                     </div>
                 </div>
 
-                <!-- Filters Card -->
                 <div class="sidebar-card">
                     <div class="card-header">
                         <h3>
@@ -120,7 +119,7 @@
                                 <circle cx="11" cy="11" r="8"></circle>
                                 <path d="m21 21-4.35-4.35"></path>
                             </svg>
-                            Quick Filters
+                            Quick Filters & Actions
                         </h3>
                     </div>
                     <div class="card-content">
@@ -134,13 +133,21 @@
                                 <option value="All">All</option>
                             </select>
                         </div>
+                        <hr class="separator">
+                        <button id="exportCsvBtn" class="btn btn-outline btn-full">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <path d="M14 2v6h6"></path>
+                                <path d="M12 18V12"></path>
+                                <path d="m15 15-3 3-3-3"></path>
+                            </svg>
+                            Export to CSV
+                        </button>
                     </div>
                 </div>
             </aside>
 
-            <!-- Main Content -->
             <main class="main-content">
-                <!-- Metrics -->
                 <div class="metrics-grid">
                     <div class="metric-card">
                         <div class="metric-header">
@@ -162,7 +169,7 @@
                     </div>
                     <div class="metric-card">
                         <div class="metric-header">
-                            <span class="metric-title">In Use</span>
+                            <span class="metric-title">In Use / Fixed</span> 
                             <svg class="metric-icon text-warning" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"></circle>
                                 <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -173,7 +180,7 @@
                     </div>
                     <div class="metric-card">
                         <div class="metric-header">
-                            <span class="metric-title">Maintenance</span>
+                            <span class="metric-title">Maint. / Repair</span> 
                             <svg class="metric-icon text-destructive" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
                             </svg>
@@ -182,7 +189,6 @@
                     </div>
                 </div>
 
-                <!-- Asset Table -->
                 <div class="table-card">
                     <div class="card-header">
                         <h3>Asset Inventory</h3>
@@ -207,11 +213,17 @@
                         </table>
                     </div>
                 </div>
+
+                <div id="assetCardList" class="asset-card-list">
+                </div>
+
             </main>
+        </div>
+        <div class="footer-credit dashboard-footer-credit">
+            Created by Jhon Marc Bautista
         </div>
     </div>
 
-    <!-- Edit Asset Modal -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -243,8 +255,10 @@
                         <option value="In Use">In Use</option>
                         <option value="Maintenance">Maintenance</option>
                         <option value="Repair">Repair</option>
+                        <option value="Fixed">Fixed</option>
                     </select>
                 </div>
+                <div id="editError" class="error-message"></div>
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary">Save Changes</button>
                     <button type="button" id="cancelEditBtn" class="btn btn-outline">Cancel</button>
@@ -253,7 +267,6 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
     <script src="/script.js"></script>
