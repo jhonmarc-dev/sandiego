@@ -64,6 +64,7 @@ function initializeEventListeners() {
     document.getElementById('categoryFilter').addEventListener('change', handleCategoryFilter);
 
     // Export CSV
+    // FIX: Element now exists in index.html
     document.getElementById('exportCsvBtn').addEventListener('click', exportToCsv);
 
     // Close modal on background click
@@ -81,18 +82,8 @@ function handleLogin(e) {
     const password = document.getElementById('password').value;
     const errorElement = document.getElementById('loginError');
 
-    if (username === 'admin' && password === '1234') {
-        localStorage.setItem('isAuthenticated', 'true');
-        showToast('Login Successful', 'success');
-        showDashboard();
-        document.getElementById('loginForm').reset();
-        errorElement.classList.remove('show');
-    } else {
-        errorElement.textContent = 'Invalid username or password';
-        errorElement.classList.add('show');
-        showToast('Invalid credentials', 'error');
-    }
-    if (username === 'jm' && password === '1234') {
+    // Consolidated login logic
+    if ((username === 'admin' || username === 'jm') && password === '1234') {
         localStorage.setItem('isAuthenticated', 'true');
         showToast('Login Successful', 'success');
         showDashboard();
@@ -128,7 +119,7 @@ function loadAssets() {
                 category: 'Electronics',
                 location: 'Computer Lab',
                 status: 'Available',
-                dateAdded: new Date().toISOString()
+                dateAdded: new Date(Date.now() - 86400000 * 5).toISOString() // 5 days ago
             },
             {
                 id: '2',
@@ -137,7 +128,26 @@ function loadAssets() {
                 category: 'Electronics',
                 location: 'Room 101',
                 status: 'In Use',
-                dateAdded: new Date().toISOString()
+                dateAdded: new Date(Date.now() - 86400000 * 2).toISOString() // 2 days ago
+            },
+            {
+                id: '3',
+                assetTag: 'SDPS-003',
+                name: 'Science Lab Table',
+                category: 'Furniture',
+                location: 'Lab A',
+                status: 'Maintenance',
+                dateAdded: new Date(Date.now() - 86400000 * 10).toISOString() // 10 days ago
+            },
+            // Added a sample 'Fixed' item
+             {
+                id: '4',
+                assetTag: 'SDPS-004',
+                name: 'Broken Printer',
+                category: 'Electronics',
+                location: 'Admin Office',
+                status: 'Fixed',
+                dateAdded: new Date(Date.now() - 86400000 * 1).toISOString() // 1 day ago
             }
         ];
         saveAssets();
@@ -192,7 +202,7 @@ function handleAddAsset(e) {
         category: document.getElementById('assetCategory').value,
         location: document.getElementById('assetLocation').value.trim(),
         status: document.getElementById('assetStatus').value,
-        dateAdded: new Date().toISOString()
+        dateAdded: new Date().toISOString() // Capture the current date
     };
 
     assets.push(newAsset);
@@ -308,13 +318,17 @@ function applyFilters() {
 function updateDashboard() {
     updateMetrics();
     updateCategoryFilter();
-    renderAssetTable();
+    renderAssetTable(); 
 }
 
 function updateMetrics() {
     const totalAssets = assets.length;
     const availableAssets = assets.filter(a => a.status === 'Available').length;
-    const inUseAssets = assets.filter(a => a.status === 'In Use').length;
+    // UPDATED: In Use metric now includes the new 'Fixed' status
+    const inUseAssets = assets.filter(a => 
+        a.status === 'In Use' || a.status === 'Fixed'
+    ).length;
+    // UPDATED: Maintenance metric remains for items needing attention
     const maintenanceAssets = assets.filter(a => 
         a.status === 'Maintenance' || a.status === 'Repair'
     ).length;
@@ -339,18 +353,33 @@ function updateCategoryFilter() {
     }
 }
 
+// NEW: Function to format the date for display
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+// NEW: Combined function to render both Table (Desktop) and Cards (Mobile)
 function renderAssetTable() {
     const tbody = document.getElementById('assetTableBody');
+    const cardList = document.getElementById('assetCardList');
 
     if (filteredAssets.length === 0) {
+        // Handle empty state for both views
         tbody.innerHTML = `
             <tr class="empty-state">
-                <td colspan="6">No assets found. Add your first asset to get started.</td>
+                <td colspan="6">No assets found matching the filter.</td>
             </tr>
+        `;
+        cardList.innerHTML = `
+            <div class="empty-state" style="text-align: center; padding: 48px 20px; color: var(--color-text-muted); font-style: italic;">
+                No assets found matching the filter.
+            </div>
         `;
         return;
     }
 
+    // 1. Render Table (Desktop View)
     tbody.innerHTML = filteredAssets.map(asset => `
         <tr>
             <td><strong>${asset.assetTag}</strong></td>
@@ -377,6 +406,49 @@ function renderAssetTable() {
                 </button>
             </td>
         </tr>
+    `).join('');
+    
+    // 2. Render Cards (Mobile View)
+    cardList.innerHTML = filteredAssets.map(asset => `
+        <div class="asset-card">
+            <div class="card-title">
+                ${asset.assetTag} - ${asset.name}
+            </div>
+            <div class="card-row">
+                <span class="card-label">Category</span>
+                <span class="card-value">${asset.category}</span>
+            </div>
+            <div class="card-row">
+                <span class="card-label">Location</span>
+                <span class="card-value">${asset.location}</span>
+            </div>
+            <div class="card-row">
+                <span class="card-label">Status</span>
+                <span class="card-value">
+                    <span class="badge ${getStatusClass(asset.status)}">
+                        ${asset.status}
+                    </span>
+                </span>
+            </div>
+            <div class="card-row">
+                <span class="card-label">Date Added</span>
+                <span class="card-value">${formatDate(asset.dateAdded)}</span>
+            </div>
+            <div class="card-actions">
+                <button class="btn btn-icon" onclick="showEditModal('${asset.id}')" title="Edit Asset">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                </button>
+                <button class="btn btn-icon text-destructive" onclick="deleteAsset('${asset.id}', '${asset.name}')" title="Delete Asset">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
     `).join('');
 }
 
@@ -428,7 +500,8 @@ function getStatusClass(status) {
         'Available': 'badge-available',
         'In Use': 'badge-in-use',
         'Maintenance': 'badge-maintenance',
-        'Repair': 'badge-repair'
+        'Repair': 'badge-repair',
+        'Fixed': 'badge-fixed' // NEW STATUS MAPPING
     };
     return statusMap[status] || 'badge-available';
 }
