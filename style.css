@@ -847,4 +847,1070 @@ td.text-right {
     .school-name {
         font-size: 20px;
     }
+    }                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    Logout
+                </button>
+            </div>
+        </header>
+
+        <div class="dashboard-container">
+            <aside class="sidebar">
+                <div class="sidebar-card">
+                    <div class="card-header">
+                        <h3>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            Select Office / Laboratory
+                        </h3>
+                    </div>
+                    <div class="card-content">
+                        <p class="instruction-text">
+                            First, choose the specific location you want to view or add assets to.
+                        </p>
+                        <div class="form-group">
+                            <label for="locationFilter">Current Location</label>
+                            <select id="locationFilter">
+                                <option value="All">All Locations (Master View)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="sidebar-card">
+                    <div class="card-header">
+                        <h3>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Add New Asset
+                        </h3>
+                    </div>
+                    <div class="card-content">
+                        <p id="locationWarning" class="instruction-text" style="color: var(--color-destructive); font-weight: 600; display: block;">
+                            Select a location above to enable adding assets.
+                        </p>
+                        
+                        <button id="openAddFormBtn" class="btn btn-primary btn-full" style="display: none;">Open Form</button>
+                        
+                        <form id="addAssetForm" class="asset-form" style="display: none;">
+                            <div class="form-group">
+                                <label for="assetTag">Asset Tag</label>
+                                <input type="text" id="assetTag" placeholder="SDPS-XXX" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="assetName">Asset Name</label>
+                                <input type="text" id="assetName" placeholder="Enter name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="assetCategory">Category</label>
+                                <input type="text" id="assetCategory" placeholder="e.g., Electronics" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="assetLocation">Location</label>
+                                <input type="text" id="assetLocation" placeholder="Will be pre-filled" readonly required>
+                            </div>
+                            <div class="form-group">
+                                <label for="assetStatus">Status</label>
+                                <select id="assetStatus" required>
+                                    <option value="Available">Available</option>
+                                    <option value="In Use">In Use</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                    <option value="Repair">Repair</option>
+                                    <option value="Fixed">Fixed</option>
+                                </select>
+                            </div>
+                            <div id="addError" class="error-message"></div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Add Asset</button>
+                                <button type="button" id="cancelAddBtn" class="btn btn-outline">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="sidebar-card">
+                    <div class="card-header">
+                        <h3>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            Quick Search & Filter
+                        </h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="form-group">
+                            <label for="searchInput">Search Asset Tag</label>
+                            <input type="text" id="searchInput" placeholder="Search by tag...">
+                        </div>
+                        <div class="form-group">
+                            <label for="categoryFilter">Filter by Category</label>
+                            <select id="categoryFilter">
+                                <option value="All">All Categories</option>
+                            </select>
+                        </div>
+                        <hr class="separator">
+                        <button id="exportCsvBtn" class="btn btn-outline btn-full">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <path d="M14 2v6h6"></path>
+                                <path d="M12 18V12"></path>
+                                <path d="m15 15-3 3-3-3"></path>
+                            </svg>
+                            Export to CSV
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="main-content">
+                <h2 id="currentLocationTitle" class="section-title">Viewing: All Locations (Master View)</h2>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Total Assets</span>
+                            <svg class="metric-icon text-primary" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                            </svg>
+                        </div>
+                        <div class="metric-value" id="totalAssets">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Available</span>
+                            <svg class="metric-icon text-success" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <div class="metric-value" id="availableAssets">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">In Use / Fixed</span> 
+                            <svg class="metric-icon text-warning" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        </div>
+                        <div class="metric-value" id="inUseAssets">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Maint. / Repair</span> 
+                            <svg class="metric-icon text-destructive" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                            </svg>
+                        </div>
+                        <div class="metric-value" id="maintenanceAssets">0</div>
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <div class="card-header">
+                        <h3>Asset Inventory</h3>
+                        <p class="view-note">Showing assets for the selected location.</p> 
+                    </div>
+                    <div class="table-container">
+                        <table id="assetTable">
+                            <thead>
+                                <tr>
+                                    <th>Asset Tag</th>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="assetTableBody">
+                                <tr class="empty-state">
+                                    <td colspan="6">No assets found. Select a location or add your first asset.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="assetCardList" class="asset-card-list">
+                </div>
+
+            </main>
+        </div>
+        
+        <div class="footer-credit dashboard-footer-credit">
+            Created by Jhon Marc Bautista
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Asset</h3>
+                <button id="closeModal" class="close-btn">&times;</button>
+            </div>
+            <form id="editAssetForm" class="asset-form">
+                <input type="hidden" id="editAssetId">
+                <div class="form-group">
+                    <label for="editAssetTag">Asset Tag</label>
+                    <input type="text" id="editAssetTag" required>
+                </div>
+                <div class="form-group">
+                    <label for="editAssetName">Asset Name</label>
+                    <input type="text" id="editAssetName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editAssetCategory">Category</label>
+                    <input type="text" id="editAssetCategory" required>
+                </div>
+                <div class="form-group">
+                    <label for="editAssetLocation">Location</label>
+                    <input type="text" id="editAssetLocation" required> 
+                </div>
+                <div class="form-group">
+                    <label for="editAssetStatus">Status</label>
+                    <select id="editAssetStatus" required>
+                        <option value="Available">Available</option>
+                        <option value="In Use">In Use</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Repair">Repair</option>
+                        <option value="Fixed">Fixed</option>
+                    </select>
+                </div>
+                <div id="editError" class="error-message"></div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" id="cancelEditBtn" class="btn btn-outline">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="/script.js"></script>
+</body>
+</html>
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Page Management */
+.page {
+    display: none;
+    transition: opacity 0.5s ease-in-out; 
+}
+
+.page.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Horizontal rule separator */
+.separator {
+    border: 0;
+    height: 1px;
+    background: var(--color-border);
+    margin: 15px 0;
+}
+
+/* --- ENHANCED PROFESSIONAL LOGIN PAGE STYLES --- */
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    padding: 20px;
+    background: linear-gradient(135deg, #102030 0%, var(--color-primary) 100%); 
+}
+
+.login-card {
+    background: var(--color-surface);
+    border-radius: 10px; 
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 10px rgba(0, 0, 0, 0.1); 
+    padding: 40px; 
+    width: 100%;
+    max-width: 380px; 
+    animation: fadeIn 0.5s ease-out; 
+    border-top: 5px solid var(--color-primary); 
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.logo-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px; 
+    height: 64px;
+    background: var(--color-primary);
+    border-radius: 50%; 
+    margin-bottom: 20px;
+    color: white;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
+    transition: var(--transition);
+}
+
+.logo-icon svg {
+    width: 32px;
+    height: 32px;
+    stroke-width: 2.5; 
+}
+
+.school-name {
+    font-size: 22px; 
+    font-weight: 700; 
+    color: var(--color-text-primary);
+    margin-bottom: 4px;
+    letter-spacing: 0.5px;
+}
+
+.system-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-secondary); 
+    margin-bottom: 0;
+    text-transform: uppercase; 
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* Form Elements */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-primary);
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 14px 16px; 
+    border: 1px solid var(--color-border); 
+    border-radius: 6px; 
+    font-size: 15px; 
+    font-family: inherit;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease; 
+    background: var(--color-background); 
+    color: var(--color-text-primary);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05); 
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-accent); /* Enhanced Focus Glow */
+    background: var(--color-surface); 
+}
+
+.form-group input::placeholder {
+    color: var(--color-text-muted);
+}
+
+/* Buttons */
+.btn {
+    padding: 12px 20px; 
+    border: none;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: var(--transition); 
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+    text-transform: uppercase; 
+    box-shadow: var(--shadow-sm); 
+}
+
+.btn-primary {
+    background: var(--color-primary);
+    color: white;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+.btn-primary:hover {
+    background: var(--color-primary-hover);
+    transform: translateY(-1px); 
+    box-shadow: var(--shadow-md); 
+}
+
+.btn-outline {
+    background: transparent;
+    color: var(--color-primary); 
+    border: 1px solid var(--color-border); 
+}
+
+.btn-outline:hover {
+    background: var(--color-background);
+    border-color: var(--color-primary);
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.btn-icon {
+    padding: 8px;
+    background: transparent;
+    color: var(--color-text-secondary);
+    border: none; 
+    box-shadow: none; 
+}
+
+.btn-icon:hover {
+    background: var(--color-background);
+    color: var(--color-primary);
+}
+
+/* Custom class for delete button icon color */
+.btn-icon.text-destructive {
+    color: var(--color-destructive);
+}
+
+.btn-icon.text-destructive:hover {
+    color: var(--color-destructive);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* --- DASHBOARD STYLES --- */
+
+/* Dashboard Header */
+.dashboard-header {
+    background: var(--color-primary);
+    color: white;
+    padding: 24px 32px;
+    box-shadow: var(--shadow-sm); 
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; 
+    max-width: 1800px;
+    margin: 0 auto;
+}
+
+/* Logout Button Visibility Fix */
+.dashboard-header .btn-outline {
+    color: white; 
+    border-color: white; 
+    box-shadow: none; 
+}
+
+.dashboard-header .btn-outline:hover {
+    background: rgba(255, 255, 255, 0.15); 
+    border-color: white;
+}
+
+.header-title h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    word-break: break-word; 
+}
+
+.header-title p {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+/* Dashboard Container */
+.dashboard-container {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 24px; 
+    /* Ensures the dashboard takes up full viewport height minus header and footer */
+    min-height: calc(100vh - 75px - 40px); 
+}
+
+/* Sidebar & Cards */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.sidebar-card {
+    background: var(--color-surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-border);
+    overflow: hidden;
+    transition: var(--transition); 
+}
+
+.sidebar-card:hover {
+    transform: translateY(-2px); 
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    padding: 16px 20px; 
+    border-bottom: 1px solid var(--color-border);
+}
+
+.card-header h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.card-content {
+    padding: 20px;
+}
+
+.asset-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.form-actions .btn {
+    flex: 1;
+}
+
+/* Main Content */
+.main-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Metrics Grid */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+}
+
+.metric-card {
+    background: var(--color-surface);
+    border-radius: var(--radius);
+    padding: 20px; 
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-border);
+    transition: var(--transition); 
+}
+
+.metric-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-3px); 
+}
+
+.metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px; 
+}
+
+.metric-title {
+    font-size: 13px; 
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-transform: uppercase; 
+}
+
+.metric-icon {
+    opacity: 0.7;
+}
+
+.metric-icon.text-primary {
+    color: var(--color-primary);
+}
+
+.metric-icon.text-success {
+    color: var(--color-success);
+}
+
+.metric-icon.text-warning {
+    color: var(--color-warning);
+}
+
+.metric-icon.text-destructive {
+    color: var(--color-destructive);
+}
+
+.metric-value {
+    font-size: 36px; 
+    font-weight: 700;
+    color: var(--color-text-primary);
+}
+
+/* Table */
+.table-card {
+    background: var(--color-surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column; 
+    max-height: 600px; 
+}
+
+.table-card .card-header {
+    flex-shrink: 0; 
+}
+
+.table-container {
+    overflow-y: auto; 
+    overflow-x: auto;
+    border-top: none; 
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    position: sticky; 
+    top: 0; 
+    z-index: 10; 
+    background: var(--color-background); 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); 
+}
+
+th {
+    padding: 16px 20px;
+    text-align: left;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+th.text-right {
+    text-align: right;
+}
+
+tbody tr {
+    border-top: 1px solid var(--color-border);
+    transition: background 0.15s ease; 
+}
+
+/* Zebra Striping for Readability */
+tbody tr:nth-child(even) {
+    background: var(--color-background);
+}
+
+tbody tr:hover {
+    background: rgba(52, 73, 94, 0.05); 
+}
+
+tbody tr.empty-state {
+    background: transparent;
+}
+
+tbody tr.empty-state:hover {
+    background: transparent;
+}
+
+td {
+    padding: 16px 20px;
+    font-size: 14px;
+    color: var(--color-text-primary);
+    vertical-align: middle;
+}
+
+td.text-right {
+    text-align: right;
+}
+
+.empty-state td {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+/* Status Badge */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px; 
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    transition: var(--transition); 
+}
+
+.badge-available {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--color-success);
+}
+
+.badge-in-use {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--color-warning);
+}
+
+.badge-maintenance {
+    background: rgba(107, 114, 128, 0.15);
+    color: var(--color-text-secondary);
+}
+
+.badge-repair {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--color-destructive);
+}
+
+/* NEW STATUS: Fixed */
+.badge-fixed {
+    background: rgba(108, 117, 125, 0.15);
+    color: var(--color-fixed);
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6); 
+    z-index: 1000;
+    animation: modalFadeIn 0.2s ease-out;
+    padding: 20px;
+}
+
+.modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-content {
+    background: var(--color-surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg); 
+    width: 100%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalSlideUp 0.3s ease-out;
+}
+
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px; 
+    border-bottom: 1px solid var(--color-border);
+}
+
+.modal-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: var(--transition);
+}
+
+.close-btn:hover {
+    background: var(--color-background);
+    color: var(--color-text-primary);
+}
+
+.modal-content .asset-form {
+    padding: 24px;
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--color-text-primary);
+    color: white;
+    padding: 16px 24px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    transform: translateY(100px);
+    opacity: 0;
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out; 
+    z-index: 2000;
+    max-width: 400px;
+}
+
+.toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.toast.error {
+    background: var(--color-destructive);
+}
+
+.toast.success {
+    background: var(--color-success);
+}
+
+/* Error Message */
+.error-message {
+    display: none;
+    padding: 12px 16px;
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--color-destructive);
+    border-radius: var(--radius);
+    font-size: 14px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    margin-top: 8px;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.error-message.show {
+    display: block;
+    opacity: 1;
+}
+
+/* --- MOBILE ASSET CARD LIST STYLES --- */
+.asset-card-list {
+    display: none; 
+    flex-direction: column;
+    gap: 16px;
+}
+
+.asset-card {
+    background: var(--color-surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--color-border);
+    padding: 16px;
+    transition: var(--transition);
+    border-left: 4px solid var(--color-primary); 
+}
+
+.asset-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.card-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+}
+
+.card-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+}
+
+.card-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    text-align: right;
+    max-width: 60%;
+    word-wrap: break-word;
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--color-primary-hover);
+    margin-bottom: 8px;
+    border-bottom: 1px dashed var(--color-border);
+    padding-bottom: 8px;
+}
+
+.card-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-border);
+}
+
+/* --- FOOTER CREDIT STYLES --- */
+.footer-credit {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    padding-top: 20px;
+}
+
+/* Specific styling for the login page credit */
+#loginPage .footer-credit {
+    color: rgba(255, 255, 255, 0.5); 
+    margin-top: 40px;
+    padding-top: 0;
+}
+
+/* Specific styling for the dashboard footer credit */
+.dashboard-footer-credit {
+    /* Ensures the credit is full width and styled at the bottom of the page */
+    grid-column: 1 / -1; /* Spans across the entire grid layout */
+    margin-top: 10px;
+    padding: 10px 0 20px 0; /* Add proper padding around it */
+    border-top: 1px solid var(--color-border);
+}
+
+/* --- RESPONSIVE DESIGN --- */
+@media (max-width: 1024px) {
+    .dashboard-container {
+        grid-template-columns: 1fr;
+        padding: 16px; /* Reduced padding for tablets */
+    }
+
+    /* FIX: Re-order elements for better mobile flow: Main Content (Metrics, Table) first, then Sidebar (Forms, Filters) */
+    .sidebar {
+        order: 2; /* Put sidebar second */
+    }
+
+    .main-content {
+        order: 1; /* Put main content (metrics, table) first */
+    }
+}
+
+@media (max-width: 768px) {
+    .login-card {
+        padding: 32px 24px;
+    }
+
+    .dashboard-header {
+        padding: 20px 16px;
+    }
+
+    .header-content {
+        flex-direction: column;
+        gap: 16px;
+        align-items: flex-start;
+    }
+
+    .dashboard-container {
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
+
+    /* Hide the desktop table and show the mobile cards */
+    .table-card {
+        display: none;
+    }
+    .asset-card-list {
+        display: flex;
+    }
+}
+
+@media (max-width: 480px) {
+    .metrics-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .metric-value {
+        font-size: 32px;
+    }
+
+    .header-title h1 {
+        font-size: 20px;
+    }
+
+    .school-name {
+        font-size: 20px;
+    }
 }
