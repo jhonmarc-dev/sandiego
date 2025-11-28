@@ -1,517 +1,526 @@
-// State Management
-let assets = [];
-let filteredAssets = [];
-let currentFilter = {
-    category: 'All',
-    search: ''
-};
-
-// Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
-    checkAuth();
-    initializeEventListeners();
-    loadAssets();
-});
 
-// --- AUTHENTICATION & NAVIGATION ---
-
-function checkAuth() {
-    // FIX: Added a small delay to ensure local storage state is fully loaded
-    // before checking authentication status, solving the persistent local file bug.
-    setTimeout(() => {
-        const isAuthenticated = localStorage.getItem('isAuthenticated');
-        if (isAuthenticated === 'true') {
-            showDashboard();
-        } else {
-            showLogin();
-        }
-    }, 50); // Delay of 50 milliseconds
-}
-
-function showLogin() {
-    document.getElementById('loginPage').classList.add('active');
-    document.getElementById('dashboardPage').classList.remove('active');
-}
-
-function showDashboard() {
-    document.getElementById('loginPage').classList.remove('active');
-    document.getElementById('dashboardPage').classList.add('active');
-    updateDashboard();
-}
-
-// Event Listeners
-function initializeEventListeners() {
-    // Login
-    document.getElementById('loginForm').addEventListener('submit', handleLogin);
-
-    // Logout
-    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-
-    // Add Asset Form
-    document.getElementById('openAddFormBtn').addEventListener('click', showAddForm);
-    document.getElementById('cancelAddBtn').addEventListener('click', hideAddForm);
-    // VALIDATION INTEGRATION
-    document.getElementById('addAssetForm').addEventListener('submit', handleAddAsset);
-
-    // Edit Asset Form
-    // VALIDATION INTEGRATION
-    document.getElementById('editAssetForm').addEventListener('submit', handleEditAsset);
-    document.getElementById('cancelEditBtn').addEventListener('click', hideEditModal);
-    document.getElementById('closeModal').addEventListener('click', hideEditModal);
-
-    // Filters
-    document.getElementById('searchInput').addEventListener('input', handleSearch);
-    document.getElementById('categoryFilter').addEventListener('change', handleCategoryFilter);
-
-    // Export CSV
-    // FIX: Element now exists in index.html
-    document.getElementById('exportCsvBtn').addEventListener('click', exportToCsv);
-
-    // Close modal on background click
-    document.getElementById('editModal').addEventListener('click', (e) => {
-        if (e.target.id === 'editModal') {
-            hideEditModal();
-        }
-    });
-}
-
-// Login Handler
-function handleLogin(e) {
-    e.preventDefault();
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    const errorElement = document.getElementById('loginError');
-
-    // Consolidated login logic
-    if ((username === 'admin' || username === 'jm') && password === '1234') {
-        localStorage.setItem('isAuthenticated', 'true');
-        showToast('Login Successful', 'success');
-        showDashboard();
-        document.getElementById('loginForm').reset();
-        errorElement.classList.remove('show');
-    } else {
-        errorElement.textContent = 'Invalid username or password';
-        errorElement.classList.add('show');
-        showToast('Invalid credentials', 'error');
-    }
-}
-
-// Logout Handler
-function handleLogout() {
-    localStorage.removeItem('isAuthenticated');
-    showToast('Logged out successfully', 'success');
-    showLogin();
-}
-
-// --- ASSET MANAGEMENT: CRUD & DATA ---
-
-function loadAssets() {
-    const savedAssets = localStorage.getItem('inventoryAssets');
-    if (savedAssets) {
-        assets = JSON.parse(savedAssets);
-    } else {
-        // Initialize with sample data
-        assets = [
-            {
-                id: '1',
-                assetTag: 'SDPS-001',
-                name: 'Desktop Computer',
-                category: 'Electronics',
-                location: 'Computer Lab',
-                status: 'Available',
-                dateAdded: new Date(Date.now() - 86400000 * 5).toISOString() // 5 days ago
-            },
-            {
-                id: '2',
-                assetTag: 'SDPS-002',
-                name: 'Projector',
-                category: 'Electronics',
-                location: 'Room 101',
-                status: 'In Use',
-                dateAdded: new Date(Date.now() - 86400000 * 2).toISOString() // 2 days ago
-            },
-            {
-                id: '3',
-                assetTag: 'SDPS-003',
-                name: 'Science Lab Table',
-                category: 'Furniture',
-                location: 'Lab A',
-                status: 'Maintenance',
-                dateAdded: new Date(Date.now() - 86400000 * 10).toISOString() // 10 days ago
-            },
-            // Added a sample 'Fixed' item
-             {
-                id: '4',
-                assetTag: 'SDPS-004',
-                name: 'Broken Printer',
-                category: 'Electronics',
-                location: 'Admin Office',
-                status: 'Fixed',
-                dateAdded: new Date(Date.now() - 86400000 * 1).toISOString() // 1 day ago
-            }
-        ];
-        saveAssets();
-    }
-    applyFilters();
-}
-
-function saveAssets() {
-    localStorage.setItem('inventoryAssets', JSON.stringify(assets));
-}
-
-// Utility for checking Asset Tag Uniqueness
-function isAssetTagUnique(tag, currentAssetId = null) {
-    const isDuplicate = assets.some(asset => 
-        asset.assetTag.toUpperCase() === tag.toUpperCase() && asset.id !== currentAssetId
-    );
-    return !isDuplicate;
-}
-
-// Add Asset Handlers
-function showAddForm() {
-    document.getElementById('openAddFormBtn').style.display = 'none';
-    document.getElementById('addAssetForm').style.display = 'flex';
-}
-
-function hideAddForm() {
-    document.getElementById('openAddFormBtn').style.display = 'block';
-    document.getElementById('addAssetForm').style.display = 'none';
-    document.getElementById('addAssetForm').reset();
-    document.getElementById('addError').classList.remove('show'); // Clear error
-}
-
-function handleAddAsset(e) {
-    e.preventDefault();
+    let assets = JSON.parse(localStorage.getItem('assets')) || [];
+    let assetIdCounter = JSON.parse(localStorage.getItem('assetIdCounter')) || 1;
     
-    const assetTagInput = document.getElementById('assetTag').value.trim();
-    const errorElement = document.getElementById('addError');
+    // list of locations (offices/labs)
+    const LOCATIONS = [
+        "Computer Lab",
+        "Science Lab",
+        "Faculty Office",
+        "Library",
+        "Admin Office",
+        "Room 101 (Classroom)",
+        "Room 102 (Classroom)",
+        "Room 201 (Classroom)"
+    ];
+    let currentLocation = 'All'; // Default view is Master View
 
-    // VALIDATION: Check for Asset Tag Uniqueness
-    if (!isAssetTagUnique(assetTagInput)) {
-        errorElement.textContent = `Asset Tag "${assetTagInput}" already exists.`;
-        errorElement.classList.add('show');
-        showToast('Duplicate Asset Tag prevented.', 'error');
-        return;
-    }
-    errorElement.classList.remove('show'); // Hide error if validation passes
 
-    const newAsset = {
-        id: Date.now().toString(),
-        assetTag: assetTagInput,
-        name: document.getElementById('assetName').value.trim(),
-        category: document.getElementById('assetCategory').value,
-        location: document.getElementById('assetLocation').value.trim(),
-        status: document.getElementById('assetStatus').value,
-        dateAdded: new Date().toISOString() // Capture the current date
+    const loginPage = document.getElementById('loginPage');
+    const dashboardPage = document.getElementById('dashboardPage');
+    const loginForm = document.getElementById('loginForm');
+    const loginError = document.getElementById('loginError');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    const assetTableBody = document.getElementById('assetTableBody');
+    const assetCardList = document.getElementById('assetCardList');
+    const locationFilter = document.getElementById('locationFilter');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const searchInput = document.getElementById('searchInput');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+    
+    // Add/Edit Form Elements
+    const openAddFormBtn = document.getElementById('openAddFormBtn');
+    const addAssetForm = document.getElementById('addAssetForm');
+    const cancelAddBtn = document.getElementById('cancelAddBtn');
+    const assetLocationInput = document.getElementById('assetLocation');
+    const addError = document.getElementById('addError');
+    
+    
+    const locationWarning = document.getElementById('locationWarning'); 
+
+    const editModal = document.getElementById('editModal');
+    const closeModalBtn = document.getElementById('closeModal');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const editAssetForm = document.getElementById('editAssetForm');
+    const editError = document.getElementById('editError');
+    const editAssetLocation = document.getElementById('editAssetLocation');
+
+    const currentLocationTitle = document.getElementById('currentLocationTitle');
+
+    // --- UTILITIES ---
+
+    const saveData = () => {
+        localStorage.setItem('assets', JSON.stringify(assets));
+        localStorage.setItem('assetIdCounter', JSON.stringify(assetIdCounter));
     };
 
-    assets.push(newAsset);
-    saveAssets();
-    applyFilters();
-    hideAddForm();
-    showToast(`${newAsset.name} added successfully`, 'success');
-}
-
-// Edit Asset Handlers
-function showEditModal(assetId) {
-    const asset = assets.find(a => a.id === assetId);
-    if (!asset) return;
-
-    document.getElementById('editAssetId').value = asset.id;
-    document.getElementById('editAssetTag').value = asset.assetTag;
-    document.getElementById('editAssetName').value = asset.name;
-    document.getElementById('editAssetCategory').value = asset.category;
-    document.getElementById('editAssetLocation').value = asset.location;
-    document.getElementById('editAssetStatus').value = asset.status;
-
-    document.getElementById('editModal').classList.add('active');
-}
-
-function hideEditModal() {
-    document.getElementById('editModal').classList.remove('active');
-    document.getElementById('editAssetForm').reset();
-    document.getElementById('editError').classList.remove('show'); // Clear error
-}
-
-function handleEditAsset(e) {
-    e.preventDefault();
-    
-    const assetId = document.getElementById('editAssetId').value;
-    const assetIndex = assets.findIndex(a => a.id === assetId);
-    const assetTagInput = document.getElementById('editAssetTag').value.trim();
-    const errorElement = document.getElementById('editError');
-
-    if (assetIndex === -1) return;
-
-    // VALIDATION: Check for Asset Tag Uniqueness during edit
-    if (!isAssetTagUnique(assetTagInput, assetId)) {
-        errorElement.textContent = `Asset Tag "${assetTagInput}" already exists.`;
-        errorElement.classList.add('show');
-        showToast('Duplicate Asset Tag prevented.', 'error');
-        return;
-    }
-    errorElement.classList.remove('show'); // Hide error if validation passes
-
-    assets[assetIndex] = {
-        ...assets[assetIndex],
-        assetTag: assetTagInput,
-        name: document.getElementById('editAssetName').value.trim(),
-        category: document.getElementById('editAssetCategory').value,
-        location: document.getElementById('editAssetLocation').value.trim(),
-        status: document.getElementById('editAssetStatus').value
+    const showToast = (message, type = 'success') => {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast show ${type}`;
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3000);
     };
 
-    saveAssets();
-    applyFilters();
-    hideEditModal();
-    showToast(`${assets[assetIndex].name} updated successfully`, 'success');
-}
+    // --- VIEW / RENDERING FUNCTIONS ---
 
-// Delete Asset Handler
-function deleteAsset(assetId, assetName) {
-    if (!confirm(`Are you sure you want to delete asset: ${assetName}? This action cannot be undone.`)) {
-        return;
-    }
-
-    // Filter out the asset with the matching ID
-    assets = assets.filter(a => a.id !== assetId);
-    
-    saveAssets();
-    applyFilters();
-    showToast(`${assetName} deleted successfully`, 'error');
-}
-
-// --- FILTERS & DISPLAY ---
-
-function handleSearch(e) {
-    currentFilter.search = e.target.value;
-    applyFilters();
-}
-
-function handleCategoryFilter(e) {
-    currentFilter.category = e.target.value;
-    applyFilters();
-}
-
-function applyFilters() {
-    let filtered = [...assets];
-
-    // Category filter
-    if (currentFilter.category !== 'All') {
-        filtered = filtered.filter(asset => asset.category === currentFilter.category);
-    }
-
-    // Search filter
-    if (currentFilter.search) {
-        const searchLower = currentFilter.search.toLowerCase();
-        filtered = filtered.filter(asset => 
-            asset.assetTag.toLowerCase().includes(searchLower) ||
-            asset.name.toLowerCase().includes(searchLower)
-        );
-    }
-
-    filteredAssets = filtered;
-    updateDashboard();
-}
-
-// Update Dashboard
-function updateDashboard() {
-    updateMetrics();
-    updateCategoryFilter();
-    renderAssetTable(); 
-}
-
-function updateMetrics() {
-    const totalAssets = assets.length;
-    const availableAssets = assets.filter(a => a.status === 'Available').length;
-    // UPDATED: In Use metric now includes the new 'Fixed' status
-    const inUseAssets = assets.filter(a => 
-        a.status === 'In Use' || a.status === 'Fixed'
-    ).length;
-    // UPDATED: Maintenance metric remains for items needing attention
-    const maintenanceAssets = assets.filter(a => 
-        a.status === 'Maintenance' || a.status === 'Repair'
-    ).length;
-
-    document.getElementById('totalAssets').textContent = totalAssets;
-    document.getElementById('availableAssets').textContent = availableAssets;
-    document.getElementById('inUseAssets').textContent = inUseAssets;
-    document.getElementById('maintenanceAssets').textContent = maintenanceAssets;
-}
-
-function updateCategoryFilter() {
-    const categories = ['All', ...new Set(assets.map(a => a.category))];
-    const filterSelect = document.getElementById('categoryFilter');
-    const currentValue = filterSelect.value;
-
-    filterSelect.innerHTML = categories
-        .map(category => `<option value="${category}">${category}</option>`)
-        .join('');
-
-    if (categories.includes(currentValue)) {
-        filterSelect.value = currentValue;
-    }
-}
-
-// NEW: Function to format the date for display
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-}
-
-// NEW: Combined function to render both Table (Desktop) and Cards (Mobile)
-function renderAssetTable() {
-    const tbody = document.getElementById('assetTableBody');
-    const cardList = document.getElementById('assetCardList');
-
-    if (filteredAssets.length === 0) {
-        // Handle empty state for both views
-        tbody.innerHTML = `
-            <tr class="empty-state">
-                <td colspan="6">No assets found matching the filter.</td>
-            </tr>
-        `;
-        cardList.innerHTML = `
-            <div class="empty-state" style="text-align: center; padding: 48px 20px; color: var(--color-text-muted); font-style: italic;">
-                No assets found matching the filter.
-            </div>
-        `;
-        return;
-    }
-
-    // 1. Render Table (Desktop View)
-    tbody.innerHTML = filteredAssets.map(asset => `
-        <tr>
-            <td><strong>${asset.assetTag}</strong></td>
-            <td>${asset.name}</td>
-            <td>${asset.category}</td>
-            <td>${asset.location}</td>
-            <td>
-                <span class="badge ${getStatusClass(asset.status)}">
-                    ${asset.status}
-                </span>
-            </td>
-            <td class="text-right">
-                <button class="btn btn-icon" onclick="showEditModal('${asset.id}')" title="Edit Asset">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                </button>
-                <button class="btn btn-icon text-destructive" onclick="deleteAsset('${asset.id}', '${asset.name}')" title="Delete Asset">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18"></path>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                </button>
-            </td>
-        </tr>
-    `).join('');
-    
-    // 2. Render Cards (Mobile View)
-    cardList.innerHTML = filteredAssets.map(asset => `
-        <div class="asset-card">
-            <div class="card-title">
-                ${asset.assetTag} - ${asset.name}
-            </div>
-            <div class="card-row">
-                <span class="card-label">Category</span>
-                <span class="card-value">${asset.category}</span>
-            </div>
-            <div class="card-row">
-                <span class="card-label">Location</span>
-                <span class="card-value">${asset.location}</span>
-            </div>
-            <div class="card-row">
-                <span class="card-label">Status</span>
-                <span class="card-value">
-                    <span class="badge ${getStatusClass(asset.status)}">
-                        ${asset.status}
-                    </span>
-                </span>
-            </div>
-            <div class="card-row">
-                <span class="card-label">Date Added</span>
-                <span class="card-value">${formatDate(asset.dateAdded)}</span>
-            </div>
-            <div class="card-actions">
-                <button class="btn btn-icon" onclick="showEditModal('${asset.id}')" title="Edit Asset">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                </button>
-                <button class="btn btn-icon text-destructive" onclick="deleteAsset('${asset.id}', '${asset.name}')" title="Delete Asset">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18"></path>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
-                </button>
-            </div>
-        </div>
-    `).join('');
-}
-
-// --- UTILITIES ---
-
-// Export Data Capability
-function exportToCsv() {
-    if (assets.length === 0) {
-        showToast('No assets to export.', 'warning');
-        return;
-    }
-
-    // 1. Define CSV Header (Column Titles)
-    const headers = ["Asset Tag", "Name", "Category", "Location", "Status", "Date Added"];
-    let csv = headers.join(',') + '\n';
-
-    // 2. Map Assets to CSV rows
-    assets.forEach(asset => {
-        // Ensure values are wrapped in quotes and commas are handled
-        const safeValue = (val) => `"${String(val).replace(/"/g, '""').trim()}"`;
+    const getFilteredAssets = () => {
+        let filteredAssets = assets;
         
-        const row = [
-            safeValue(asset.assetTag),
-            safeValue(asset.name),
-            safeValue(asset.category),
-            safeValue(asset.location),
-            safeValue(asset.status),
-            safeValue(new Date(asset.dateAdded).toLocaleDateString()) 
-        ].join(',');
-        csv += row + '\n';
+        // 1. Filter by Location
+        if (currentLocation !== 'All') {
+            filteredAssets = filteredAssets.filter(asset => asset.location === currentLocation);
+        }
+
+        // 2. Filter by Category
+        const selectedCategory = categoryFilter.value;
+        if (selectedCategory !== 'All') {
+            filteredAssets = filteredAssets.filter(asset => asset.category === selectedCategory);
+        }
+
+        // 3. Filter by Search Tag
+        const searchTerm = searchInput.value.toLowerCase();
+        if (searchTerm) {
+            filteredAssets = filteredAssets.filter(asset => asset.tag.toLowerCase().includes(searchTerm));
+        }
+
+        return filteredAssets;
+    };
+    
+    const populateLocationFilter = () => {
+        locationFilter.innerHTML = '<option value="All">All Locations (Master View)</option>';
+        
+        LOCATIONS.forEach(location => {
+            const option = document.createElement('option');
+            option.value = location;
+            option.textContent = location;
+            locationFilter.appendChild(option);
+        });
+        
+        locationFilter.value = currentLocation;
+    };
+    
+    const updateCategoryFilter = () => {
+        // Assets used for category filtering should only be those currently visible
+        const assetsInView = getFilteredAssets(); 
+        const categories = [...new Set(assetsInView.map(asset => asset.category))].sort();
+        
+        const currentSelected = categoryFilter.value;
+        categoryFilter.innerHTML = '<option value="All">All Categories</option>';
+        
+        categories.forEach(category => {
+            const option = document.createElement('option');
+            option.value = category;
+            option.textContent = category;
+            categoryFilter.appendChild(option);
+        });
+        
+        if (categories.includes(currentSelected)) {
+            categoryFilter.value = currentSelected;
+        } else {
+            categoryFilter.value = 'All';
+        }
+    };
+
+    const createBadge = (status) => {
+        const span = document.createElement('span');
+        span.textContent = status;
+        span.classList.add('badge', `badge-${status.toLowerCase().replace(/\s/g, '-')}`);
+        return span;
+    };
+
+    const renderTable = () => {
+        const filteredAssets = getFilteredAssets();
+        assetTableBody.innerHTML = '';
+        assetCardList.innerHTML = '';
+
+        if (filteredAssets.length === 0) {
+            const emptyStateRow = document.createElement('tr');
+            emptyStateRow.classList.add('empty-state');
+            emptyStateRow.innerHTML = `<td colspan="6">No assets found in ${currentLocation === 'All' ? 'any location with these filters.' : currentLocation}.</td>`;
+            assetTableBody.appendChild(emptyStateRow);
+            assetCardList.style.display = 'none'; 
+            
+        } else {
+             filteredAssets.forEach(asset => {
+                // ... (Table Row and Mobile Card generation code is unchanged)
+                
+                const row = assetTableBody.insertRow();
+                row.dataset.id = asset.id;
+                
+                row.insertCell().textContent = asset.tag;
+                row.insertCell().textContent = asset.name;
+                row.insertCell().textContent = asset.category;
+                row.insertCell().textContent = asset.location;
+                row.insertCell().appendChild(createBadge(asset.status));
+
+                const actionsCell = row.insertCell();
+                actionsCell.classList.add('text-right');
+                actionsCell.innerHTML = `
+                    <button class="btn btn-icon edit-btn" data-id="${asset.id}" title="Edit">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                        </svg>
+                    </button>
+                    <button class="btn btn-icon delete-btn text-destructive" data-id="${asset.id}" title="Delete">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                    </button>
+                `;
+
+                const card = document.createElement('div');
+                card.classList.add('asset-card');
+                card.dataset.id = asset.id;
+                
+                card.innerHTML = `
+                    <div class="card-title">${asset.tag} - ${asset.name}</div>
+                    <div class="card-row">
+                        <span class="card-label">Category</span>
+                        <span class="card-value">${asset.category}</span>
+                    </div>
+                    <div class="card-row">
+                        <span class="card-label">Location</span>
+                        <span class="card-value">${asset.location}</span>
+                    </div>
+                    <div class="card-row">
+                        <span class="card-label">Status</span>
+                        <span class="card-value">${createBadge(asset.status).outerHTML}</span>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-icon edit-btn" data-id="${asset.id}" title="Edit">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                            </svg>
+                        </button>
+                        <button class="btn btn-icon delete-btn text-destructive" data-id="${asset.id}" title="Delete">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18"></path>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                        </button>
+                    </div>
+                `;
+                assetCardList.appendChild(card);
+             });
+        }
+
+
+        // Ensure the card list is visible on mobile if assets exist
+        if (window.innerWidth <= 768 && filteredAssets.length > 0) {
+             assetCardList.style.display = 'flex';
+        }
+
+        attachEditDeleteListeners();
+        updateMetrics();
+        updateCategoryFilter();
+    };
+
+    const updateMetrics = () => {
+        // CRITICAL: Ensure currentLocation matches the filter value
+        currentLocation = locationFilter.value; 
+        
+        // Calculate metrics only for the currently filtered assets (by Location)
+        const assetsInView = assets.filter(asset => currentLocation === 'All' || asset.location === currentLocation);
+
+        const total = assetsInView.length;
+        const available = assetsInView.filter(a => a.status === 'Available').length;
+        const inUseFixed = assetsInView.filter(a => a.status === 'In Use' || a.status === 'Fixed').length;
+        const maintenance = assetsInView.filter(a => a.status === 'Maintenance' || a.status === 'Repair').length;
+
+        document.getElementById('totalAssets').textContent = total;
+        document.getElementById('availableAssets').textContent = available;
+        document.getElementById('inUseAssets').textContent = inUseFixed;
+        document.getElementById('maintenanceAssets').textContent = maintenance;
+        
+        // Update the main title to show the current view
+        currentLocationTitle.textContent = `Viewing: ${currentLocation === 'All' ? 'All Locations (Master View)' : currentLocation}`;
+        
+        // --- CRITICAL VISIBILITY LOGIC FIX ---
+        if (currentLocation === 'All') {
+            // Master View: Disable Add functionality
+            locationWarning.style.display = 'block'; 
+            openAddFormBtn.style.display = 'none';
+            addAssetForm.style.display = 'none'; // Ensure form is hidden
+        } else {
+            // Specific Location: Enable Add functionality
+            locationWarning.style.display = 'none'; 
+            openAddFormBtn.style.display = 'block'; 
+            
+            // Also ensure the form is hidden (only the button shows initially) and location is set
+            addAssetForm.style.display = 'none'; 
+            assetLocationInput.value = currentLocation;
+        }
+        // -------------------------------------
+        
+    };
+
+
+    // --- CRUD FUNCTIONS ---
+
+    const handleAddAsset = (e) => {
+        e.preventDefault();
+        
+        if (currentLocation === 'All') {
+            addError.textContent = "Please select a specific Office/Laboratory before adding an asset.";
+            addError.style.display = 'block';
+            return;
+        }
+
+        const newAsset = {
+            id: assetIdCounter++,
+            tag: document.getElementById('assetTag').value.trim(),
+            name: document.getElementById('assetName').value.trim(),
+            category: document.getElementById('assetCategory').value.trim(),
+            location: currentLocation, 
+            status: document.getElementById('assetStatus').value,
+            dateAdded: new Date().toISOString().split('T')[0] 
+        };
+
+        if (!newAsset.tag || !newAsset.name || !newAsset.category || !newAsset.location) {
+            addError.textContent = "All fields are required.";
+            addError.style.display = 'block';
+            return;
+        }
+
+        if (assets.some(a => a.tag === newAsset.tag)) {
+             addError.textContent = `Asset Tag "${newAsset.tag}" already exists.`;
+             addError.style.display = 'block';
+             return;
+        }
+        
+        addError.style.display = 'none';
+
+        assets.push(newAsset);
+        saveData();
+        renderTable(); 
+        
+        // Reset form and UI
+        addAssetForm.reset();
+        addAssetForm.style.display = 'none';
+        openAddFormBtn.style.display = 'block';
+        showToast('Asset added successfully.');
+    };
+
+    const handleEditAsset = (e) => {
+        e.preventDefault();
+        const id = parseInt(document.getElementById('editAssetId').value);
+        const index = assets.findIndex(asset => asset.id === id);
+
+        if (index > -1) {
+            const updatedAsset = {
+                ...assets[index], 
+                tag: document.getElementById('editAssetTag').value.trim(),
+                name: document.getElementById('editAssetName').value.trim(),
+                category: document.getElementById('editAssetCategory').value.trim(),
+                location: document.getElementById('editAssetLocation').value.trim(),
+                status: document.getElementById('editAssetStatus').value
+            };
+            
+            if (!updatedAsset.tag || !updatedAsset.name || !updatedAsset.category || !updatedAsset.location) {
+                editError.textContent = "All fields are required.";
+                editError.style.display = 'block';
+                return;
+            }
+            
+            if (assets.some(a => a.tag === updatedAsset.tag && a.id !== id)) {
+                editError.textContent = `Asset Tag "${updatedAsset.tag}" already exists.`;
+                editError.style.display = 'block';
+                return;
+            }
+
+            editError.style.display = 'none';
+            assets[index] = updatedAsset;
+            saveData();
+            renderTable();
+            editModal.classList.remove('active');
+            showToast('Asset updated successfully.');
+        }
+    };
+
+    const handleDeleteAsset = (id) => {
+        if (confirm('Are you sure you want to delete this asset? This action cannot be undone.')) {
+            assets = assets.filter(asset => asset.id !== id);
+            saveData();
+            renderTable();
+            showToast('Asset deleted successfully.', 'destructive');
+        }
+    };
+
+    const populateEditModal = (id) => {
+        const asset = assets.find(a => a.id === id);
+        if (asset) {
+            document.getElementById('editAssetId').value = asset.id;
+            document.getElementById('editAssetTag').value = asset.tag;
+            document.getElementById('editAssetName').value = asset.name;
+            document.getElementById('editAssetCategory').value = asset.category;
+            document.getElementById('editAssetLocation').value = asset.location;
+            document.getElementById('editAssetStatus').value = asset.status;
+            
+            editError.style.display = 'none'; 
+            editModal.classList.add('active');
+        }
+    };
+
+    const attachEditDeleteListeners = () => {
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            button.onclick = (e) => {
+                e.stopPropagation();
+                populateEditModal(parseInt(e.currentTarget.dataset.id));
+            };
+        });
+
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.onclick = (e) => {
+                e.stopPropagation();
+                handleDeleteAsset(parseInt(e.currentTarget.dataset.id));
+            };
+        });
+    };
+    
+    // --- EVENT HANDLERS ---
+    
+    // Location Filter Change Handler
+    locationFilter.addEventListener('change', (e) => {
+        currentLocation = e.target.value; 
+        
+        // Reset category and search inputs when location changes
+        categoryFilter.value = 'All';
+        searchInput.value = '';
+        
+        renderTable(); 
     });
 
-    // 3. Trigger Download
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    // Category Filter Change Handler
+    categoryFilter.addEventListener('change', renderTable);
     
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', 'sdps_inventory_export_' + Date.now() + '.csv');
+    // Search Input Handler
+    searchInput.addEventListener('input', renderTable);
     
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // CSV Export Handler
+    exportCsvBtn.addEventListener('click', () => {
+        const filteredAssets = getFilteredAssets(); 
+        if (filteredAssets.length === 0) {
+            showToast('No assets to export based on current filters.', 'warning');
+            return;
+        }
 
-    showToast('Inventory exported successfully!', 'success');
-}
+        const locationName = currentLocation === 'All' ? 'Master_Inventory' : currentLocation.replace(/\s/g, '_');
+        
+        let csvContent = "Asset Tag,Name,Category,Location,Status,Date Added\n";
+        
+        filteredAssets.forEach(asset => {
+            const row = [
+                asset.tag,
+                asset.name,
+                asset.category,
+                asset.location,
+                asset.status,
+                asset.dateAdded
+            ].map(item => `"${item}"`).join(','); 
+            
+            csvContent += row + '\n';
+        });
 
-function getStatusClass(status) {
-    const statusMap = {
-        'Available': 'badge-available',
-        'In Use': 'badge-in-use',
-        'Maintenance': 'badge-maintenance',
-        'Repair': 'badge-repair',
-        'Fixed': 'badge-fixed' // NEW STATUS MAPPING
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', `${locationName}_Assets_Export.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('CSV export started.');
+    });
+
+
+    // --- UI TOGGLES ---
+
+    addAssetForm.addEventListener('submit', handleAddAsset);
+    editAssetForm.addEventListener('submit', handleEditAsset);
+
+
+    openAddFormBtn.addEventListener('click', () => {
+        if (currentLocation === 'All') {
+            showToast("Please select a specific Office or Laboratory first.", 'warning');
+            return;
+        }
+        openAddFormBtn.style.display = 'none';
+        addAssetForm.style.display = 'flex';
+        assetLocationInput.value = currentLocation; 
+        document.getElementById('assetTag').focus();
+    });
+
+    cancelAddBtn.addEventListener('click', () => {
+        addAssetForm.reset();
+        addAssetForm.style.display = 'none';
+        openAddFormBtn.style.display = 'block';
+        addError.style.display = 'none';
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+        editModal.classList.remove('active');
+    });
+
+    cancelEditBtn.addEventListener('click', () => {
+        editModal.classList.remove('active');
+    });
+
+    window.onclick = (event) => {
+        if (event.target === editModal) {
+            editModal.classList.remove('active');
+        }
     };
-    return statusMap[status] || 'badge-available';
-}
 
-function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.className = `toast ${type} show`;
 
-    setTimeout(() => {
-        toast.classList.remove('show');
-    }, 3000);
-}
+    // --- AUTHENTICATION & INITIALIZATION ---
+    
+    const isAuthenticated = () => localStorage.getItem('authenticated') === 'true';
+
+    const login = () => {
+        loginPage.classList.remove('active');
+        dashboardPage.classList.add('active');
+        localStorage.setItem('authenticated', 'true');
+        // Initial dashboard setup after successful login
+        populateLocationFilter();
+        // Call renderTable, which calls updateMetrics to fix the visibility state
+        renderTable(); 
+    };
+
+    const logout = () => {
+        loginPage.classList.add('active');
+        dashboardPage.classList.remove('active');
+        localStorage.removeItem('authenticated');
+        loginForm.reset();
+        loginError.style.display = 'none';
+        
+        currentLocation = 'All'; 
+    };
+
+    loginForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        // Simple mock login logic
+        if (username === 'admin' && password === 'admin') {
+            login();
+        } else {
+            loginError.textContent = 'Invalid username or password.';
+            loginError.style.display = 'block';
+        }
+    });
+
+    logoutBtn.addEventListener('click', logout);
+
+    // Initial check on load
+    if (isAuthenticated()) {
+        login(); 
+    } else {
+        // Ensure the warning is displayed on load if not logged in
+        if(locationWarning) locationWarning.style.display = 'block';
+    }
+});
