@@ -68,6 +68,277 @@
                     <div class="card-header">
                         <h3>
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z"/>
+                                <circle cx="12" cy="10" r="3"/>
+                            </svg>
+                            Select Office / Laboratory
+                        </h3>
+                    </div>
+                    <div class="card-content">
+                        <p class="instruction-text">
+                            First, choose the specific location you want to view or add assets to.
+                        </p>
+                        <div class="form-group">
+                            <label for="locationFilter">Current Location</label>
+                            <select id="locationFilter">
+                                <option value="All">All Locations (Master View)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+
+                <div class="sidebar-card">
+                    <div class="card-header">
+                        <h3>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Add New Asset
+                        </h3>
+                    </div>
+                    <div class="card-content">
+                        <p id="locationWarning" class="instruction-text" style="color: var(--color-destructive); font-weight: 600; display: block;">
+                            Select a location above to enable adding assets.
+                        </p>
+                        
+                        <button id="openAddFormBtn" class="btn btn-primary btn-full" style="display: none;">Open Form</button>
+                        
+                        <form id="addAssetForm" class="asset-form" style="display: none;">
+                            <div class="form-group">
+                                <label for="assetTag">Asset Tag</label>
+                                <input type="text" id="assetTag" placeholder="SDPS-XXX" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="assetName">Asset Name</label>
+                                <input type="text" id="assetName" placeholder="Enter name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="assetCategory">Category</label>
+                                <input type="text" id="assetCategory" placeholder="e.g., Electronics" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="assetLocation">Location</label>
+                                <input type="text" id="assetLocation" placeholder="Will be pre-filled" readonly required>
+                            </div>
+                            <div class="form-group">
+                                <label for="assetStatus">Status</label>
+                                <select id="assetStatus" required>
+                                    <option value="Available">Available</option>
+                                    <option value="In Use">In Use</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                    <option value="Repair">Repair</option>
+                                    <option value="Fixed">Fixed</option>
+                                </select>
+                            </div>
+                            <div id="addError" class="error-message"></div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Add Asset</button>
+                                <button type="button" id="cancelAddBtn" class="btn btn-outline">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="sidebar-card">
+                    <div class="card-header">
+                        <h3>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            Quick Search & Filter
+                        </h3>
+                    </div>
+                    <div class="card-content">
+                        <div class="form-group">
+                            <label for="searchInput">Search Asset Tag</label>
+                            <input type="text" id="searchInput" placeholder="Search by tag...">
+                        </div>
+                        <div class="form-group">
+                            <label for="categoryFilter">Filter by Category</label>
+                            <select id="categoryFilter">
+                                <option value="All">All Categories</option>
+                            </select>
+                        </div>
+                        <hr class="separator">
+                        <button id="exportCsvBtn" class="btn btn-outline btn-full">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <path d="M14 2v6h6"></path>
+                                <path d="M12 18V12"></path>
+                                <path d="m15 15-3 3-3-3"></path>
+                            </svg>
+                            Export to CSV
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            <main class="main-content">
+                <h2 id="currentLocationTitle" class="section-title">Viewing: All Locations (Master View)</h2>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Total Assets</span>
+                            <svg class="metric-icon text-primary" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                            </svg>
+                        </div>
+                        <div class="metric-value" id="totalAssets">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Available</span>
+                            <svg class="metric-icon text-success" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
+                        <div class="metric-value" id="availableAssets">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">In Use / Fixed</span> 
+                            <svg class="metric-icon text-warning" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        </div>
+                        <div class="metric-value" id="inUseAssets">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-header">
+                            <span class="metric-title">Maint. / Repair</span> 
+                            <svg class="metric-icon text-destructive" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                            </svg>
+                        </div>
+                        <div class="metric-value" id="maintenanceAssets">0</div>
+                    </div>
+                </div>
+
+                <div class="table-card">
+                    <div class="card-header">
+                        <h3>Asset Inventory</h3>
+                        <p class="view-note">Showing assets for the selected location.</p> 
+                    </div>
+                    <div class="table-container">
+                        <table id="assetTable">
+                            <thead>
+                                <tr>
+                                    <th>Asset Tag</th>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Location</th>
+                                    <th>Status</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="assetTableBody">
+                                <tr class="empty-state">
+                                    <td colspan="6">No assets found. Select a location or add your first asset.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="assetCardList" class="asset-card-list">
+                </div>
+
+            </main>
+        </div>
+        
+        <div class="footer-credit dashboard-footer-credit">
+            Created by Jhon Marc Bautista
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Asset</h3>
+                <button id="closeModal" class="close-btn">&times;</button>
+            </div>
+            <form id="editAssetForm" class="asset-form">
+                <input type="hidden" id="editAssetId">
+                <div class="form-group">
+                    <label for="editAssetTag">Asset Tag</label>
+                    <input type="text" id="editAssetTag" required>
+                </div>
+                <div class="form-group">
+                    <label for="editAssetName">Asset Name</label>
+                    <input type="text" id="editAssetName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editAssetCategory">Category</label>
+                    <input type="text" id="editAssetCategory" required>
+                </div>
+                <div class="form-group">
+                    <label for="editAssetLocation">Location</label>
+                    <input type="text" id="editAssetLocation" required> 
+                </div>
+                <div class="form-group">
+                    <label for="editAssetStatus">Status</label>
+                    <select id="editAssetStatus" required>
+                        <option value="Available">Available</option>
+                        <option value="In Use">In Use</option>
+                        <option value="Maintenance">Maintenance</option>
+                        <option value="Repair">Repair</option>
+                        <option value="Fixed">Fixed</option>
+                    </select>
+                </div>
+                <div id="editError" class="error-message"></div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" id="cancelEditBtn" class="btn btn-outline">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="/script.js"></script>
+</body>
+</html>
+                    <button type="submit" class="btn btn-primary">Sign In</button>
+                    <div id="loginError" class="error-message"></div>
+                </form>
+            </div>
+            <div class="footer-credit">
+                Created by Jhon Marc Bautista
+            </div>
+        </div>
+    </div>
+
+    <div id="dashboardPage" class="page">
+        <header class="dashboard-header">
+            <div class="header-content">
+                <div class="header-title">
+                    <h1>San Diego Parochial School Inc.</h1>
+                    <p>Inventory Management System</p>
+                </div>
+                <button id="logoutBtn" class="btn btn-outline">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                        <polyline points="16 17 21 12 16 7"></polyline>
+                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                    Logout
+                </button>
+            </div>
+        </header>
+
+        <div class="dashboard-container">
+            <aside class="sidebar">
+                <div class="sidebar-card">
+                    <div class="card-header">
+                        <h3>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
